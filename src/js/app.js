@@ -6,22 +6,30 @@ document.addEventListener('DOMContentLoaded', function() {
 function darkMode() {
 
     const prefiereDarkMode = window.matchMedia('(prefers-color-scheme: dark)');
+    const botonDarkMode = document.querySelector('.dark-mode-boton');
+    let src = botonDarkMode.getAttribute('src');
 
     if( prefiereDarkMode.matches && localStorage.getItem('dark-mode') === 'true' ) {
         document.body.classList.add('dark-mode');
+        src = src.replace('light-mode.svg', 'dark-mode.svg');
     } else {
         document.body.classList.remove('dark-mode');
+        src = src.replace('dark-mode.svg', 'light-mode.svg');
     }
+    botonDarkMode.style.display = 'block';
+    botonDarkMode.setAttribute('src', src);
 
     prefiereDarkMode.addEventListener('change', function() {
         if( prefiereDarkMode.matches ) {
             document.body.classList.add('dark-mode');
+            src = src.replace('light-mode.svg', 'dark-mode.svg');
         } else {
             document.body.classList.remove('dark-mode');
+            src = src.replace('dark-mode.svg', 'light-mode.svg');
         }
     });
-
-    const botonDarkMode = document.querySelector('.dark-mode-boton');
+    botonDarkMode.setAttribute('src', src);
+    botonDarkMode.style.display = 'block';
 
     botonDarkMode.addEventListener('click', function() {
         document.body.classList.toggle('dark-mode');
@@ -30,9 +38,14 @@ function darkMode() {
         // Guardamos el modo en local storage
         if (document.body.classList.contains('dark-mode')) {
             localStorage.setItem('dark-mode', 'true');
+            src = src.replace('light-mode.svg', 'dark-mode.svg');
         } else {
             localStorage.setItem('dark-mode', 'false');
+            src = src.replace('dark-mode.svg', 'light-mode.svg');
         }
+
+        botonDarkMode.setAttribute('src', src);
+        botonDarkMode.style.display = 'block';
     });
 }
 
