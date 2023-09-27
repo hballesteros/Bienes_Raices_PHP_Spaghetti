@@ -1,0 +1,19 @@
+{
+    "name": "hugo/bienesraices_php",
+    "description": "Creando un proyecto con POO",
+    "type": "project",
+    "authors": [
+        {
+            "name": "Hugo",
+            "email": "hugo@boahstudio.com"
+        }
+    ],
+    "require": {
+        "intervention/image": "^2.7"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "./classes"
+        }
+    }
+}
