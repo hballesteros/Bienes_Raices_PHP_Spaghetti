@@ -33,20 +33,12 @@ class Propiedad {
     public $creado;
     public $vendedores_id;
 
-    /**
-     * Define la conexion a la base de datos
-     * @param object $database
-     * @return void
-     */
+    // Conectar a la base de datos
     public static function setDB($database) {
         self::$db = $database;
     }
 
-    /**
-     * Constructor de la clase
-     * @param array $args Arreglo asociativo con propiedades de la clase
-     * @return void
-     */
+    // Constructor
     public function __construct($args = []) {
         $this->id = $args["id"] ?? null;
         $this->titulo = $args["titulo"] ?? "";
@@ -57,14 +49,22 @@ class Propiedad {
         $this->wc = $args["wc"] ?? "";
         $this->estacionamiento = $args["estacionamiento"] ?? "";
         $this->creado = date("Y/m/d");
-        $this->vendedores_id = $args["vendedores_id"] ?? "";
+        $this->vendedores_id = $args["vendedores_id"] ?? "1";
     }
 
-    /**
-     * Guarda una propiedad en la base de datos
-     * @return void
-     */
+    // Guarda los cambios realizados
     public function guardar() {
+        if(isset($this->id)) {
+            // Actualizar
+            $this->actualizar();
+        } else {
+            // Insertar
+            $this->crear();
+        }
+    }
+
+    // Crea la propiedad en la base de datos
+    public function crear() {
 
         // Sanitizar los datos
         $atributos = $this->sanitizarAtributos();
@@ -83,11 +83,33 @@ class Propiedad {
 
     }
 
-    /**
-     * Toma las propiedades y las convierte en un objeto
-     * @param array $propiedad
-     * @return object
-     */
+    // Actualiza la propiedad en la base de datos
+    public function actualizar() {
+
+        // Sanitizar los datos
+        $atributos = $this->sanitizarAtributos();
+
+        // Generar query
+        $valores = [];
+        foreach($atributos as $key => $value) {
+            $valores[] = "{$key} = '{$value}'";
+        }
+
+        $query = "UPDATE propiedades SET ";
+        $query .= join(", ", $valores);
+        $query .= " WHERE id = '" . self::$db->escape_string($this->id) . "' ";
+        $query .= " LIMIT 1 ";
+
+        // Actualizar en la base de datos
+        $resultado = self::$db->query($query);
+
+        if($resultado) {
+            // Redireccionar al usuario
+            header("Location: /admin?resultado=2");
+        }
+    }
+
+    // Toma las propiedades y las convierte en un objeto
     public function atributos() {
         $atributos = [];
         foreach(self::$columnasDB as $columna) {
@@ -97,10 +119,7 @@ class Propiedad {
         return $atributos;
     }
 
-   /**
-    * Sanitiza los datos
-    * @return array
-    */
+    // Sanitiza los datos
     public function sanitizarAtributos() {
         $atributos = $this->atributos();
         $sanitizado = [];
@@ -110,16 +129,18 @@ class Propiedad {
         return $sanitizado;
     }
 
-    /**
-     * Sube la imagen al servidor
-     * @param string $nombreImagen
-     * @return void
-     */
+    // Sube la imagen a la carpeta
     public function setImagen($imagen) {
         // Elimina la imagen previa
-        // if(!is_null($this->id)) {
-        //     $this->borrarImagen();
-        // }
+        //debuguear(CARPETA_IMAGENES . $this->imagen);
+        if($this->id) {
+            // Comprobar si la imagen existe
+            $existeArchivo = file_exists(CARPETA_IMAGENES . $this->imagen);
+            
+            if($existeArchivo) {
+                unlink(CARPETA_IMAGENES . $this->imagen);
+            }
+        }
 
         // Asignar al atributo de imagen el nombre de la imagen
         if($imagen) {
@@ -127,18 +148,12 @@ class Propiedad {
         }
     }
 
-    /**
-     * Obtener Errores
-     * @return array
-     */
+    // Obtener los errores
     public static function getErrores() {
         return self::$errores;
     }
 
-    /**
-     * Valida los datos antes de guardarlos
-     * @return array
-     */
+    // Valida los datos antes de guardarlos
     public function validar() {
 
         if(!$this->titulo) {
@@ -184,11 +199,16 @@ class Propiedad {
         return $resultado;
     }
 
-    /**
-     * Consulta propiedades de la base de datos
-     * @param $query
-     * @return array
-     */
+    // Listar propiedades por id
+    public static function find($id) {
+        $query = "SELECT * FROM propiedades WHERE id = ${id}";
+        $resultado = self::consultarSQL($query);
+
+        // nos retorna el primer elemento del arreglo
+        return array_shift($resultado);
+    }
+
+    // Consultar propiedades en base a un query
     public static function consultarSQL($query) {
         // Consultar la base de datos
         $resultado = self::$db->query($query);
@@ -206,11 +226,7 @@ class Propiedad {
         return $array;
     }
 
-    /**
-     * Crear un objeto en base a una consulta
-     * @param array $registro
-     * @return object
-     */
+    // Crear un objeto en base a la consulta
     protected static function crearObjeto($registro) {
         $objeto = new self;
 
@@ -223,4 +239,13 @@ class Propiedad {
         return $objeto;
     }
 
+    // Sincroniza el objeto en memoria con los cambios realizados por el usuario
+    public function sincronizar($args = []) {
+        foreach($args as $key => $value) {
+            if(property_exists($this, $key) && !is_null($value)) {
+                $this->$key = $value;
+            }
+        }
+    }
+    
 }
