@@ -54,7 +54,7 @@ class Propiedad {
 
     // Guarda los cambios realizados
     public function guardar() {
-        if(isset($this->id)) {
+        if(!is_null($this->id)) {
             // Actualizar
             $this->actualizar();
         } else {
@@ -79,7 +79,11 @@ class Propiedad {
         // Insertar en la base de datos
         $resultado = self::$db->query($query);
 
-        return $resultado;
+        // Mensaje de exito
+        if($resultado) {
+            // Redireccionar al usuario
+            header("Location: /admin?resultado=1");
+        }
 
     }
 
@@ -143,11 +147,9 @@ class Propiedad {
     // Sube la imagen a la carpeta
     public function setImagen($imagen) {
         // Elimina la imagen previa
-        //debuguear(CARPETA_IMAGENES . $this->imagen);
-        if($this->id) {
+        if( !is_null($this->id) ) {
             $this->borrarImagen();
         }
-
         // Asignar al atributo de imagen el nombre de la imagen
         if($imagen) {
             $this->imagen = $imagen;
